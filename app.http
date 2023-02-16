@@ -1,0 +1,73 @@
+###
+get http://localhost:8080/todos/?status=TO%20DO/
+
+###
+get http://localhost:8080/todos/?priority=HIGH/
+
+###
+get http://localhost:8080/todos/?priority=HIGH&status=IN%20PROGRESS/
+
+###
+get http://localhost:8080/todos/?search_q=buy/
+
+###
+get http://localhost:8080/todos/?category=WORK&status=DONE/
+
+###
+get http://localhost:8080/todos/?category=HOME
+
+###
+get http://localhost:8080/todos/?category=LEARNING&priority=HIGH
+
+###
+get http://localhost:8080/todos/6/
+
+###
+get http://localhost:8080/agenda/?date=2021-12-12
+
+### 
+post http://localhost:8080/todos/
+Content-Type: application/json
+
+{
+ "id": 6,
+ "todo": "Finalize event theme",
+ "priority": "LOW",
+ "status": "TO DO",
+ "category": "HOME",
+ "dueDate": "2021-02-02"
+}
+
+###
+put http://localhost:8080/todos/6/
+Content-Type: application/json
+
+{ "status": "DONE" }
+
+###
+put http://localhost:8080/todos/6/
+Content-Type: application/json
+
+{ "priority": "HIGH" }
+
+###
+put http://localhost:8080/todos/6/
+Content-Type: application/json
+
+{
+"todo": "Clean the garden"
+}
+
+###
+put http://localhost:8080/todos/6/
+Content-Type: application/json
+
+{ "category": "LEARNING" }
+###
+put http://localhost:8080/todos/6/
+Content-Type: application/json
+
+{ "dueDate": "2021-01-22" }
+
+###
+delete http://localhost:8080/todos/5/
