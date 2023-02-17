@@ -144,25 +144,32 @@ app.get("/agenda/", async (request, response) => {
   const { date } = request.query;
   let dateList = date.split("-");
   year = parseInt(dateList[0]);
-  month = parseInt(dateList[1]);
+  month = parseInt(dateList[1]) - 1;
   day = parseInt(dateList[2]);
   const formattedDate = format(new Date(year, month, day), "yyyy-MM-dd");
-  const getTodoQuery = `
+  //   const checkQuery = await database.all(`
+  //       SELECT
+  //         *
+  //       FROM
+  //         todo
+  //       WHERE
+  //         due_date = '${date}';`);
+  if (isValid(new Date(date))) {
+    const getTodoQuery = `
       SELECT
         *
       FROM
         todo
       WHERE
         due_date = '${formattedDate}';`;
-  const todo = await database.all(getTodoQuery);
-  if (isValid(new Date(formattedDate)) && todo.length !== 0) {
+    const todo = await database.all(getTodoQuery);
     reqInfo = todo.map((data) => {
       return changeFormat(data);
     });
     response.send(reqInfo);
   } else {
     response.status(400);
-    response.send("Invalid Due Date");
+    response.send(`Invalid Due Date`);
   }
 });
 
