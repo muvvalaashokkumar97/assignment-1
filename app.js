@@ -32,7 +32,7 @@ const initializeDbAndServer = async () => {
 initializeDbAndServer();
 
 const priorityList = ["HIGH", "MEDIUM", "LOW"];
-const statusList = ["TO DO", "INPROGRESS", "DONE"];
+const statusList = ["TO DO", "IN PROGRESS", "DONE"];
 const categoryList = ["WORK", "HOME", "LEARNING"];
 
 const hasPriorityAndStatusProperties = (requestQuery) => {
@@ -142,34 +142,30 @@ app.get("/todos/:todoId/", async (request, response) => {
 
 app.get("/agenda/", async (request, response) => {
   const { date } = request.query;
-  let dateList = date.split("-");
-  year = parseInt(dateList[0]);
-  month = parseInt(dateList[1]) - 1;
-  day = parseInt(dateList[2]);
-  const formattedDate = format(new Date(year, month, day), "yyyy-MM-dd");
-  //   const checkQuery = await database.all(`
-  //       SELECT
-  //         *
-  //       FROM
-  //         todo
-  //       WHERE
-  //         due_date = '${date}';`);
-  if (isValid(new Date(date))) {
-    const getTodoQuery = `
+  if (date === undefined) {
+    response.status(400);
+    response.send("Invalid Due Date");
+  } else {
+    const isDateValid = isValid(new Date(date));
+
+    if (isDateValid) {
+      const formattedDate = format(new Date(date), "yyyy-MM-dd");
+      const getTodoQuery = `
       SELECT
-        *
+        id, todo, priority, status, category, due_date as dueDate
       FROM
         todo
       WHERE
         due_date = '${formattedDate}';`;
-    const todo = await database.all(getTodoQuery);
-    reqInfo = todo.map((data) => {
-      return changeFormat(data);
-    });
-    response.send(reqInfo);
-  } else {
-    response.status(400);
-    response.send(`Invalid Due Date`);
+      const todo = await database.all(getTodoQuery);
+      //   reqInfo = todo.map((data) => {
+      //     return changeFormat(data);
+      //   });
+      response.send(todo);
+    } else {
+      response.status(400);
+      response.send("Invalid Due Date");
+    }
   }
 });
 
@@ -194,11 +190,12 @@ app.post("/todos/", async (request, response) => {
     response.status(400);
     response.send(invalidError);
   } else {
+    const formattedDate = format(new Date(dueDate), "yyyy-MM-dd");
     const postTodoQuery = `
   INSERT INTO
     todo (id, todo, priority, status, category, due_date)
   VALUES
-    (${id}, '${todo}', '${priority}', '${status}','${category}','${dueDate}');`;
+    (${id}, '${todo}', '${priority}', '${status}','${category}','${formattedDate}');`;
     const todoAdded = await database.run(postTodoQuery);
     response.send("Todo Successfully Added");
   }
@@ -206,9 +203,9 @@ app.post("/todos/", async (request, response) => {
 
 app.put("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
-  let updatedColumn = null;
+  let updatedColumn = "";
+  let invalidError = null;
   const requestBody = request.body;
-
   const previousTodoQuery = `
     SELECT
       *
@@ -217,7 +214,6 @@ app.put("/todos/:todoId/", async (request, response) => {
     WHERE 
       id = ${todoId};`;
   const previousTodo = await database.get(previousTodoQuery);
-
   const {
     todo = previousTodo.todo,
     priority = previousTodo.priority,
@@ -225,7 +221,6 @@ app.put("/todos/:todoId/", async (request, response) => {
     category = previousTodo.category,
     dueDate = previousTodo.due_date,
   } = request.body;
-
   switch (true) {
     case requestBody.status !== undefined:
       updateColumn = "Status";
@@ -258,6 +253,7 @@ app.put("/todos/:todoId/", async (request, response) => {
     response.status(400);
     response.send(invalidError);
   } else {
+    const formattedDate = format(new Date(dueDate), "yyyy-MM-dd");
     const updateTodoQuery = `
     UPDATE
       todo
@@ -266,7 +262,7 @@ app.put("/todos/:todoId/", async (request, response) => {
       priority='${priority}',
       status='${status}',
       category = '${category}',
-      due_date = '${dueDate}'
+      due_date = '${formattedDate}'
     WHERE
       id = ${todoId};`;
     const updatedTodo = await database.run(updateTodoQuery);
@@ -281,7 +277,6 @@ app.delete("/todos/:todoId/", async (request, response) => {
     todo
   WHERE
     id = ${todoId};`;
-
   await database.run(deleteTodoQuery);
   response.send("Todo Deleted");
 });
